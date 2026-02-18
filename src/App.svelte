@@ -1,14 +1,9 @@
 <script>
-  import { writable } from 'svelte/store';
+  import { currentPage, currentGame, user } from './stores.js';
   import Lobby from './components/Lobby.svelte';
   import Ranking from './components/Ranking.svelte';
   import Chat from './components/Chat.svelte';
   import Profile from './components/Profile.svelte';
-
-  // 간단한 라우터 (페이지 상태)
-  export const currentPage = writable('lobby');
-  export const currentGame = writable(null);
-  export const user = writable(null);
 
   let page;
   let gameComponent;

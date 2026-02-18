@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { io } from 'socket.io-client';
-  import { currentPage } from '../../App.svelte';
+  import { currentPage } from '../../stores.js';
 
   let socket;
   let canvas;

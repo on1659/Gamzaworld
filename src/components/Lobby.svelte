@@ -1,5 +1,5 @@
 <script>
-  import { currentPage, currentGame } from '../App.svelte';
+  import { currentPage, currentGame } from '../stores.js';
 
   const games = [
     {
