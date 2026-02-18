@@ -25,11 +25,26 @@
     }
   ];
 
-  function startGame(gameId) {
-    // TODO: 동적 import로 게임 컴포넌트 로드
-    alert(`${gameId} 게임 준비 중... (개발 예정)`);
-    // currentGame.set(GameComponent);
-    // currentPage.set('game');
+  async function startGame(gameId) {
+    try {
+      let GameComponent;
+      
+      // 동적 import로 게임 컴포넌트 로드
+      if (gameId === 'timing-jump') {
+        const module = await import('../games/timing-jump/TimingJump.svelte');
+        GameComponent = module.default;
+      } else {
+        alert(`${gameId} 게임 준비 중... (개발 예정)`);
+        return;
+      }
+      
+      // 게임 페이지로 전환
+      currentGame.set(GameComponent);
+      currentPage.set('game');
+    } catch (error) {
+      console.error('Failed to load game:', error);
+      alert('게임 로드 실패!');
+    }
   }
 </script>
 

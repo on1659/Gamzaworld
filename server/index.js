@@ -39,10 +39,13 @@ app.get('/api/rankings/:game', async (req, res) => {
   res.json({ rankings: [] });
 });
 
-// Socket.IO for real-time chat
+// Socket.IO for real-time features
+import { gameSessionManager } from './game/GameSessionManager.js';
+
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+  // ===== 채팅 =====
   socket.on('chat:message', (data) => {
     io.emit('chat:message', {
       ...data,
@@ -50,8 +53,72 @@ io.on('connection', (socket) => {
     });
   });
 
+  // ===== 게임 세션 =====
+  
+  // 게임 시작 (싱글 모드)
+  socket.on('game:start', ({ gameId, mode = 'single', playerData }) => {
+    try {
+      // 세션 생성
+      const session = gameSessionManager.createSession(gameId, mode);
+      
+      // 플레이어 추가
+      gameSessionManager.joinSession(session.sessionId, socket.id, playerData);
+      
+      // 게임 시작
+      const state = gameSessionManager.startSession(session.sessionId);
+      
+      // 클라이언트에 세션 정보 전송
+      socket.emit('game:started', state);
+      
+      // 게임 루프 상태를 주기적으로 전송 (30 FPS)
+      const stateInterval = setInterval(() => {
+        const currentSession = gameSessionManager.getSession(session.sessionId);
+        if (!currentSession || currentSession.state === 'finished') {
+          clearInterval(stateInterval);
+          return;
+        }
+        
+        const currentState = currentSession.getState();
+        socket.emit('game:state', currentState);
+        
+        // versus 모드: 상대방에게도 전송
+        if (mode === 'versus') {
+          socket.to(session.sessionId).emit('game:opponent-state', 
+            currentSession.getPlayerState(socket.id)
+          );
+        }
+      }, 1000 / 30); // 30 FPS
+      
+    } catch (error) {
+      socket.emit('game:error', { message: error.message });
+    }
+  });
+
+  // 입력 처리
+  socket.on('game:input', (input) => {
+    try {
+      const state = gameSessionManager.handleInput(socket.id, input);
+      if (state) {
+        socket.emit('game:state', state);
+      }
+    } catch (error) {
+      socket.emit('game:error', { message: error.message });
+    }
+  });
+
+  // 게임 종료
+  socket.on('game:end', () => {
+    const session = gameSessionManager.getPlayerSession(socket.id);
+    if (session) {
+      session.end();
+      socket.emit('game:finished', session.getFinalResults());
+    }
+  });
+
+  // 연결 해제 시 세션에서 제거
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
+    gameSessionManager.leaveSession(socket.id);
   });
 });
 
