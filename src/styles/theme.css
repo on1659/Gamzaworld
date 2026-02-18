@@ -1,0 +1,284 @@
+/**
+ * 🎨 Gamzaworld 글로벌 테마 시스템
+ * 모든 색상, 두께, 애니메이션은 이 파일에서만 관리
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Jua&family=Pretendard:wght@400;600;700&display=swap');
+
+:root {
+  /* ===== 색상 시스템 ===== */
+  
+  /* Primary Colors - 메인 브랜드 컬러 */
+  --color-primary: #FF6B9D;
+  --color-primary-light: #FFB3D0;
+  --color-primary-dark: #E04A7A;
+  
+  /* Secondary Colors */
+  --color-secondary: #FFD93D;
+  --color-secondary-light: #FFE87C;
+  --color-secondary-dark: #FFC700;
+  
+  /* Accent Colors */
+  --color-accent-1: #6BCF7F;
+  --color-accent-2: #4ECDC4;
+  --color-accent-3: #A78BFA;
+  
+  /* Background Colors */
+  --color-bg-primary: #FFF5F9;
+  --color-bg-secondary: #FFFFFF;
+  --color-bg-tertiary: #F0F0F0;
+  
+  /* Text Colors */
+  --color-text-primary: #2D1B4E;
+  --color-text-secondary: #6B5B8C;
+  --color-text-disabled: #C4B5D9;
+  --color-text-white: #FFFFFF;
+  
+  /* Border Colors */
+  --color-border-primary: #2D1B4E;
+  --color-border-light: #E0D5F0;
+  
+  /* Tier Colors */
+  --color-tier-bronze: #CD7F32;
+  --color-tier-silver: #C0C0C0;
+  --color-tier-gold: #FFD700;
+  --color-tier-platinum: #00CED1;
+  --color-tier-diamond: #B9F2FF;
+  
+  /* ===== 두께 시스템 ===== */
+  
+  /* 외곽선 두께 */
+  --border-width-thin: 2px;
+  --border-width-medium: 3px;
+  --border-width-thick: 4px;
+  --border-width-mega: 6px;
+  
+  /* 테두리 둥글기 */
+  --border-radius-sm: 12px;
+  --border-radius-md: 16px;
+  --border-radius-lg: 24px;
+  --border-radius-xl: 32px;
+  --border-radius-full: 9999px;
+  
+  /* ===== 타이포그래피 ===== */
+  
+  /* 폰트 패밀리 */
+  --font-display: 'Jua', sans-serif;
+  --font-body: 'Pretendard', -apple-system, sans-serif;
+  
+  /* 폰트 크기 */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-size-3xl: 48px;
+  
+  /* 폰트 굵기 */
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* ===== 간격 시스템 ===== */
+  
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  
+  /* ===== 그림자 ===== */
+  
+  --shadow-sm: 0 2px 8px rgba(45, 27, 78, 0.1);
+  --shadow-md: 0 4px 16px rgba(45, 27, 78, 0.15);
+  --shadow-lg: 0 8px 32px rgba(45, 27, 78, 0.2);
+  --shadow-colored: 0 8px 24px rgba(255, 107, 157, 0.3);
+  
+  /* ===== 애니메이션 속도 ===== */
+  
+  --duration-fast: 0.15s;
+  --duration-normal: 0.3s;
+  --duration-slow: 0.5s;
+  
+  /* ===== Z-Index ===== */
+  
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+}
+
+/* ===== 글로벌 리셋 ===== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== 애니메이션 정의 ===== */
+
+/* Elastic Bounce - 버튼 클릭 효과 */
+@keyframes elasticBounce {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  75% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Pop In - 모달 등장 */
+@keyframes popIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Wiggle - 강조 효과 */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+/* Bounce Float - 부드러운 떠다니기 */
+@keyframes bounceFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Pulse Glow - 맥박 빛나기 */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 157, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(255, 107, 157, 0);
+  }
+}
+
+/* ===== 유틸리티 클래스 ===== */
+
+/* 텍스트 */
+.text-display {
+  font-family: var(--font-display);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 버튼 공통 스타일 */
+.btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: var(--border-width-thick) solid var(--color-border-primary);
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: all var(--duration-normal) cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+}
+
+.btn-base:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-colored);
+}
+
+.btn-base:active {
+  animation: elasticBounce var(--duration-normal);
+}
+
+/* 카드 공통 스타일 */
+.card-base {
+  background: var(--color-bg-secondary);
+  border: var(--border-width-medium) solid var(--color-border-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  transition: all var(--duration-normal);
+}
+
+.card-base:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* 뱃지 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: var(--border-width-thin) solid var(--color-border-primary);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-bg-secondary);
+}
+
+/* 티어별 색상 */
+.tier-bronze { color: var(--color-tier-bronze); }
+.tier-silver { color: var(--color-tier-silver); }
+.tier-gold { color: var(--color-tier-gold); }
+.tier-platinum { color: var(--color-tier-platinum); }
+.tier-diamond { color: var(--color-tier-diamond); }
+
+/* ===== 반응형 유틸리티 ===== */
+
+@media (max-width: 768px) {
+  :root {
+    --font-size-base: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 20px;
+    --font-size-2xl: 28px;
+    --font-size-3xl: 36px;
+  }
+}
