@@ -1,9 +1,12 @@
 <script>
+  import { onMount } from 'svelte';
   import { currentPage, currentGame, user } from './stores.js';
   import LobbyNew from './components/LobbyNew.svelte';
   import Ranking from './components/Ranking.svelte';
   import Chat from './components/Chat.svelte';
   import Profile from './components/Profile.svelte';
+  import LoginButton from './components/LoginButton.svelte';
+  import AuthCallback from './components/AuthCallback.svelte';
   
   // 테마 CSS 임포트
   import './styles/theme.css';
@@ -13,6 +16,16 @@
   
   currentPage.subscribe(value => page = value);
   currentGame.subscribe(value => gameComponent = value);
+
+  // 페이지 로드 시 세션 복원
+  onMount(() => {
+    user.init();
+
+    // URL 체크: /auth/callback 인 경우
+    if (window.location.pathname === '/auth/callback') {
+      currentPage.set('auth-callback');
+    }
+  });
 </script>
 
 <main class="app">
@@ -21,17 +34,22 @@
     <div class="nav-left">
       <h1 class="logo">🎮 Gamzaworld</h1>
     </div>
-    <div class="nav-right">
+    <div class="nav-center">
       <button on:click={() => currentPage.set('lobby')}>로비</button>
       <button on:click={() => currentPage.set('ranking')}>랭킹</button>
       <button on:click={() => currentPage.set('chat')}>채팅</button>
       <button on:click={() => currentPage.set('profile')}>프로필</button>
     </div>
+    <div class="nav-right">
+      <LoginButton />
+    </div>
   </nav>
 
   <!-- 페이지 컨텐츠 -->
   <div class="content">
-    {#if page === 'lobby'}
+    {#if page === 'auth-callback'}
+      <AuthCallback />
+    {:else if page === 'lobby'}
       <LobbyNew />
     {:else if page === 'ranking'}
       <Ranking />
@@ -95,12 +113,17 @@
     text-shadow: 2px 2px 0 var(--color-border-primary);
   }
 
-  .nav-right {
+  .nav-center {
     display: flex;
     gap: var(--spacing-sm);
   }
 
-  .nav-right button {
+  .nav-right {
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-center button {
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--color-bg-primary);
     color: var(--color-text-primary);
@@ -121,12 +144,12 @@
     box-shadow: var(--shadow-md);
   }
 
-  .nav-right button:active {
+  .nav-center button:active {
     animation: elasticBounce var(--duration-normal);
   }
 
   /* 활성 탭 표시 (추후 추가 가능) */
-  .nav-right button.active {
+  .nav-center button.active {
     background: var(--color-secondary);
     box-shadow: var(--shadow-colored);
   }
@@ -153,15 +176,20 @@
       font-size: var(--font-size-xl);
     }
 
-    .nav-right {
+    .nav-center {
       width: 100%;
       justify-content: center;
       flex-wrap: wrap;
+      order: 2;
     }
 
-    .nav-right button {
+    .nav-right {
+      order: 3;
+    }
+
+    .nav-center button {
       flex: 1;
-      min-width: 120px;
+      min-width: 100px;
     }
   }
 </style>
