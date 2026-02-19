@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { currentPage, currentGame, user } from './stores.js';
-  import LobbyNew from './components/LobbyNew.svelte';
+  import LobbyShowcase from './components/LobbyShowcase.svelte';
   import Ranking from './components/Ranking.svelte';
   import Chat from './components/Chat.svelte';
   import Profile from './components/Profile.svelte';
@@ -50,7 +50,7 @@
     {#if page === 'auth-callback'}
       <AuthCallback />
     {:else if page === 'lobby'}
-      <LobbyNew />
+      <LobbyShowcase />
     {:else if page === 'ranking'}
       <Ranking />
     {:else if page === 'chat'}
