@@ -7,6 +7,12 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { getUserByGoogleId, createUser } from '../db/users.js';
 
 export function setupPassport() {
+  // Google OAuth 환경변수가 없으면 스킽
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.warn('⚠️  Google OAuth credentials not found. Login disabled.');
+    return;
+  }
+
   passport.use(
     new GoogleStrategy(
       {
