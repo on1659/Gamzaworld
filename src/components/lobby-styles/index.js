@@ -9,6 +9,7 @@ export { default as LobbyStyle7 } from './LobbyStyle7.svelte';
 export { default as LobbyStyle8 } from './LobbyStyle8.svelte';
 export { default as LobbyStyle9 } from './LobbyStyle9.svelte';
 export { default as LobbyStyle10 } from './LobbyStyle10.svelte';
+export { default as LobbyStyle11 } from './LobbyStyle11.svelte';
 
 export const lobbyStyles = [
   { id: 1, name: 'Grid Cards', description: '카드 그리드 레이아웃' },
@@ -20,5 +21,6 @@ export const lobbyStyles = [
   { id: 7, name: 'Minimal White', description: '심플 화이트 대형 타이포' },
   { id: 8, name: 'Retro Pixel', description: '8bit 아케이드 레트로' },
   { id: 9, name: 'Glassmorphism', description: '투명 유리 블러 효과' },
-  { id: 10, name: 'Gradient Flow', description: '흐르는 무지개 그라디언트' }
+  { id: 10, name: 'Gradient Flow', description: '흐르는 무지개 그라디언트' },
+  { id: 11, name: 'Landing Page', description: '커피챗 스타일 화이트 랜딩' }
 ];

@@ -2,13 +2,15 @@
   import { 
     LobbyStyle1, LobbyStyle2, LobbyStyle3, LobbyStyle4, LobbyStyle5,
     LobbyStyle6, LobbyStyle7, LobbyStyle8, LobbyStyle9, LobbyStyle10,
+    LobbyStyle11,
     lobbyStyles 
   } from './lobby-styles/index.js';
   import { currentPage, currentGame } from '../stores.js';
   
   const components = [
     LobbyStyle1, LobbyStyle2, LobbyStyle3, LobbyStyle4, LobbyStyle5,
-    LobbyStyle6, LobbyStyle7, LobbyStyle8, LobbyStyle9, LobbyStyle10
+    LobbyStyle6, LobbyStyle7, LobbyStyle8, LobbyStyle9, LobbyStyle10,
+    LobbyStyle11
   ];
   
   let currentStyleIndex = 0;
