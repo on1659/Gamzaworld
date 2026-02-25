@@ -1,12 +1,15 @@
 <script>
+  export let onPlay = () => {};
+
   const games = [
-    { id: 1, emoji: '🏃', name: '타이밍 점프', color: '#FFB3D9' },
-    { id: 2, emoji: '🎵', name: '리듬 탭', color: '#B3E5FF' },
-    { id: 3, emoji: '🏗️', name: '스택 타워', color: '#FFE5B3' },
+    { id: 'timing-jump', emoji: '🏃', name: '타이밍 점프', color: '#FFB3D9', available: true },
+    { id: 'rhythm-tap',  emoji: '🎵', name: '리듬 탭',    color: '#B3E5FF', available: false },
+    { id: 'stack-tower', emoji: '🏗️', name: '스택 타워',  color: '#FFE5B3', available: false },
   ];
 
-  function playGame(id) {
-    alert(`게임 ${id} 준비 중! 🎮`);
+  function playGame(game) {
+    if (!game.available) return;
+    onPlay(game.id);
   }
 </script>
 
@@ -23,14 +26,24 @@
   <!-- 게임 카드들 -->
   <div class="games">
     {#each games as game}
-      <button 
-        class="game-card" 
+      <button
+        class="game-card"
+        class:unavailable={!game.available}
         style="--card-color: {game.color}"
-        on:click={() => playGame(game.id)}
+        on:click={() => playGame(game)}
+        disabled={!game.available}
+        title={game.available ? '' : '준비 중...'}
       >
+        {#if !game.available}
+          <div class="coming-soon-badge">준비 중</div>
+        {/if}
         <div class="game-emoji">{game.emoji}</div>
         <div class="game-name">{game.name}</div>
-        <div class="play-icon">▶</div>
+        {#if game.available}
+          <div class="play-icon">▶</div>
+        {:else}
+          <div class="play-icon soon">🔒</div>
+        {/if}
       </button>
     {/each}
   </div>
@@ -88,7 +101,7 @@
     padding: 32px 24px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 
+    box-shadow:
       0 8px 24px rgba(0, 0, 0, 0.1),
       0 0 0 4px rgba(255, 255, 255, 0.3);
     animation: fadeInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
@@ -98,15 +111,33 @@
   .game-card:nth-child(2) { animation-delay: 0.2s; }
   .game-card:nth-child(3) { animation-delay: 0.3s; }
 
-  .game-card:hover {
+  .game-card:not(.unavailable):hover {
     transform: translateY(-12px) scale(1.05);
-    box-shadow: 
+    box-shadow:
       0 16px 48px rgba(0, 0, 0, 0.15),
       0 0 0 6px rgba(255, 255, 255, 0.5);
   }
 
-  .game-card:active {
+  .game-card:not(.unavailable):active {
     transform: translateY(-8px) scale(1.02);
+  }
+
+  .game-card.unavailable {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: grayscale(30%);
+  }
+
+  .coming-soon-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.35);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
   }
 
   .game-emoji {
@@ -115,7 +146,7 @@
     animation: wiggle 1.5s ease-in-out infinite;
   }
 
-  .game-card:hover .game-emoji {
+  .game-card:not(.unavailable):hover .game-emoji {
     animation: spin 0.6s ease-in-out;
   }
 
@@ -140,72 +171,46 @@
     transition: all 0.3s;
   }
 
-  .game-card:hover .play-icon {
+  .play-icon.soon {
+    font-size: 20px;
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  .game-card:not(.unavailable):hover .play-icon {
     background: rgba(255, 255, 255, 0.5);
     transform: scale(1.2);
   }
 
   /* 애니메이션 */
   @keyframes fadeInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-30px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes bounce {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-10px); }
   }
 
   @keyframes wiggle {
-    0%, 100% {
-      transform: rotate(0deg);
-    }
-    25% {
-      transform: rotate(-5deg);
-    }
-    75% {
-      transform: rotate(5deg);
-    }
+    0%, 100% { transform: rotate(0deg); }
+    25%       { transform: rotate(-5deg); }
+    75%       { transform: rotate(5deg); }
   }
 
   @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
   }
 
   /* 반응형 */
   @media (max-width: 480px) {
-    .lobby {
-      padding: 24px 16px;
-    }
-
-    .games {
-      grid-template-columns: 1fr;
-    }
+    .lobby { padding: 24px 16px; }
+    .games { grid-template-columns: 1fr; }
   }
 </style>

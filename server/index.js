@@ -70,7 +70,11 @@ io.on('connection', (socket) => {
     try {
       // 세션 생성
       const session = gameSessionManager.createSession(gameId, mode);
-      
+      if (!session) {
+        socket.emit('game:error', { message: `'${gameId}' 게임을 찾을 수 없습니다` });
+        return;
+      }
+
       // 플레이어 추가
       gameSessionManager.joinSession(session.sessionId, socket.id, playerData);
       
@@ -80,22 +84,26 @@ io.on('connection', (socket) => {
       // 클라이언트에 세션 정보 전송
       socket.emit('game:started', state);
       
-      // 게임 루프 상태를 주기적으로 전송 (30 FPS)
+      // 게임 루프: 30fps로 게임 업데이트 후 상태 전송
       const stateInterval = setInterval(() => {
         const currentSession = gameSessionManager.getSession(session.sessionId);
         if (!currentSession || currentSession.state === 'finished') {
           clearInterval(stateInterval);
           return;
         }
-        
-        const currentState = currentSession.getState();
+
+        // 게임 한 프레임 업데이트
+        const currentState = currentSession.update();
+        if (!currentState) {
+          clearInterval(stateInterval);
+          return;
+        }
+
         socket.emit('game:state', currentState);
-        
-        // versus 모드: 상대방에게도 전송
-        if (mode === 'versus') {
-          socket.to(session.sessionId).emit('game:opponent-state', 
-            currentSession.getPlayerState(socket.id)
-          );
+
+        // 게임 오버 → 인터벌 정리
+        if (currentSession.state === 'finished') {
+          clearInterval(stateInterval);
         }
       }, 1000 / 30); // 30 FPS
       

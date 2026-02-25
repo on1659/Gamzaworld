@@ -1,9 +1,24 @@
 <script>
   import Lobby from './Lobby.svelte';
+  import TimingJump from './games/timing-jump/TimingJump.svelte';
+
+  let currentView = 'lobby'; // 'lobby' | 'timing-jump'
+
+  function goToGame(gameId) {
+    currentView = gameId;
+  }
+
+  function goToLobby() {
+    currentView = 'lobby';
+  }
 </script>
 
 <main>
-  <Lobby />
+  {#if currentView === 'lobby'}
+    <Lobby onPlay={goToGame} />
+  {:else if currentView === 'timing-jump'}
+    <TimingJump onBack={goToLobby} />
+  {/if}
 </main>
 
 <style>
