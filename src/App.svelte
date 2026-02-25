@@ -1,9 +1,66 @@
 <script>
+  import { onMount } from 'svelte';
   import Lobby from './Lobby.svelte';
   import TimingJump from './games/timing-jump/TimingJump.svelte';
+  import AuthHeader from './components/AuthHeader.svelte';
 
   let currentView = 'lobby'; // 'lobby' | 'timing-jump'
+  let user = null; // 로그인한 유저 정보
 
+  // ── 인증 ───────────────────────────────────────────
+  function getToken() {
+    return localStorage.getItem('gw_token');
+  }
+
+  function setToken(token) {
+    localStorage.setItem('gw_token', token);
+  }
+
+  function clearToken() {
+    localStorage.removeItem('gw_token');
+  }
+
+  async function fetchMe(token) {
+    try {
+      const res = await fetch('/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
+  function handleLogin() {
+    // Google OAuth 시작
+    window.location.href = '/auth/google';
+  }
+
+  function handleLogout() {
+    clearToken();
+    user = null;
+  }
+
+  // ── Auth callback (/auth/callback?token=...) ──────
+  onMount(async () => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    if (token) {
+      setToken(token);
+      // URL 정리
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    const stored = getToken();
+    if (stored) {
+      user = await fetchMe(stored);
+      if (!user) clearToken(); // 만료된 토큰 정리
+    }
+  });
+
+  // ── 뷰 전환 ──────────────────────────────────────
   function goToGame(gameId) {
     currentView = gameId;
   }
@@ -12,6 +69,8 @@
     currentView = 'lobby';
   }
 </script>
+
+<AuthHeader {user} onLogin={handleLogin} onLogout={handleLogout} />
 
 <main>
   {#if currentView === 'lobby'}
@@ -40,5 +99,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding-top: 56px; /* AuthHeader 높이 */
   }
 </style>

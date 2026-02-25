@@ -8,6 +8,10 @@ import dotenv from 'dotenv';
 import passport from 'passport';
 import { setupPassport } from './auth/passport.js';
 import authRoutes from './routes/auth.js';
+import { gameSessionManager } from './game/GameSessionManager.js';
+import { saveScore, getRankings } from './db/scores.js';
+import { updateUserStats } from './db/users.js';
+import { verifyToken } from './auth/jwt.js';
 
 dotenv.config();
 
@@ -21,8 +25,8 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://gamzaworld.up.railway.app'] 
+    origin: process.env.NODE_ENV === 'production'
+      ? ['https://gamzaworld.up.railway.app']
       : ['http://localhost:5173'],
     credentials: true
   }
@@ -43,17 +47,31 @@ app.get('/health', (req, res) => {
 // Auth routes
 app.use('/auth', authRoutes);
 
-// API routes will go here
+// 랭킹 API
 app.get('/api/rankings/:game', async (req, res) => {
-  // TODO: DB query
-  res.json({ rankings: [] });
+  try {
+    const rankings = await getRankings(req.params.game, 10);
+    res.json({ rankings });
+  } catch (error) {
+    console.error('Rankings error:', error);
+    // DB 미연결 시 빈 배열 반환 (개발 환경 대비)
+    res.json({ rankings: [] });
+  }
 });
 
 // Socket.IO for real-time features
-import { gameSessionManager } from './game/GameSessionManager.js';
-
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
+
+  // JWT 인증 (옵션)
+  socket.user = null;
+  socket.on('auth:token', (token) => {
+    const user = verifyToken(token);
+    if (user) {
+      socket.user = user;
+      socket.emit('auth:ok', { id: user.id, username: user.username });
+    }
+  });
 
   // ===== 채팅 =====
   socket.on('chat:message', (data) => {
@@ -64,7 +82,7 @@ io.on('connection', (socket) => {
   });
 
   // ===== 게임 세션 =====
-  
+
   // 게임 시작 (싱글 모드)
   socket.on('game:start', ({ gameId, mode = 'single', playerData }) => {
     try {
@@ -77,13 +95,13 @@ io.on('connection', (socket) => {
 
       // 플레이어 추가
       gameSessionManager.joinSession(session.sessionId, socket.id, playerData);
-      
+
       // 게임 시작
       const state = gameSessionManager.startSession(session.sessionId);
-      
+
       // 클라이언트에 세션 정보 전송
       socket.emit('game:started', state);
-      
+
       // 게임 루프: 30fps로 게임 업데이트 후 상태 전송
       const stateInterval = setInterval(() => {
         const currentSession = gameSessionManager.getSession(session.sessionId);
@@ -101,12 +119,29 @@ io.on('connection', (socket) => {
 
         socket.emit('game:state', currentState);
 
-        // 게임 오버 → 인터벌 정리
-        if (currentSession.state === 'finished') {
+        // 게임 오버 → 점수 저장 후 인터벌 정리
+        if (currentState.status === 'gameover') {
           clearInterval(stateInterval);
+
+          // 점수 저장 (비동기, 에러 무시)
+          const playerName = playerData?.name || socket.user?.username || '게스트';
+          saveScore({
+            userId: socket.user?.id || null,
+            gameId,
+            score: currentState.score,
+            playerName,
+          }).then(() => {
+            socket.emit('game:score_saved', { score: currentState.score });
+            // 로그인 유저면 통계 업데이트
+            if (socket.user?.id) {
+              return updateUserStats(socket.user.id, currentState.score);
+            }
+          }).catch(err => {
+            console.error('Score save error:', err);
+          });
         }
       }, 1000 / 30); // 30 FPS
-      
+
     } catch (error) {
       socket.emit('game:error', { message: error.message });
     }
@@ -144,7 +179,7 @@ io.on('connection', (socket) => {
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../dist');
   app.use(express.static(distPath));
-  
+
   app.use((req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });

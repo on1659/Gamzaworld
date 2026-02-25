@@ -41,14 +41,15 @@ CREATE TABLE IF NOT EXISTS game_scores (
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   game_id VARCHAR(50) NOT NULL,
   score INTEGER NOT NULL,
-  played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_game_score (game_id, score DESC)
+  player_name VARCHAR(100) DEFAULT '게스트',
+  played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스 추가
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_game_scores_user ON game_scores(user_id);
+CREATE INDEX IF NOT EXISTS idx_game_scores_game_score ON game_scores(game_id, score DESC);
 
 -- 기본 업적 데이터
 INSERT INTO achievements (name, description, icon, condition_type, condition_value) VALUES

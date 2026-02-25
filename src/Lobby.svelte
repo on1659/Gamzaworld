@@ -7,9 +7,39 @@
     { id: 'stack-tower', emoji: '🏗️', name: '스택 타워',  color: '#FFE5B3', available: false },
   ];
 
+  let activeTab = 'games'; // 'games' | 'rankings'
+  let rankings = [];
+  let rankingsLoaded = false;
+  let rankingsLoading = false;
+
   function playGame(game) {
     if (!game.available) return;
     onPlay(game.id);
+  }
+
+  async function loadRankings() {
+    if (rankingsLoaded) return;
+    rankingsLoading = true;
+    try {
+      const res = await fetch('/api/rankings/timing-jump');
+      const data = await res.json();
+      rankings = data.rankings || [];
+    } catch (e) {
+      rankings = [];
+    } finally {
+      rankingsLoading = false;
+      rankingsLoaded = true;
+    }
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    if (tab === 'rankings') loadRankings();
+  }
+
+  function tierEmoji(tier) {
+    const map = { bronze: '🥉', silver: '🥈', gold: '🥇', diamond: '💎' };
+    return map[tier] || '';
   }
 </script>
 
@@ -23,30 +53,73 @@
     <p class="subtitle">재미있는 게임을 골라봐요!</p>
   </div>
 
-  <!-- 게임 카드들 -->
-  <div class="games">
-    {#each games as game}
-      <button
-        class="game-card"
-        class:unavailable={!game.available}
-        style="--card-color: {game.color}"
-        on:click={() => playGame(game)}
-        disabled={!game.available}
-        title={game.available ? '' : '준비 중...'}
-      >
-        {#if !game.available}
-          <div class="coming-soon-badge">준비 중</div>
-        {/if}
-        <div class="game-emoji">{game.emoji}</div>
-        <div class="game-name">{game.name}</div>
-        {#if game.available}
-          <div class="play-icon">▶</div>
-        {:else}
-          <div class="play-icon soon">🔒</div>
-        {/if}
-      </button>
-    {/each}
+  <!-- 탭 -->
+  <div class="tabs">
+    <button class="tab" class:active={activeTab === 'games'} on:click={() => switchTab('games')}>
+      🕹 게임
+    </button>
+    <button class="tab" class:active={activeTab === 'rankings'} on:click={() => switchTab('rankings')}>
+      🏆 랭킹
+    </button>
   </div>
+
+  <!-- 게임 탭 -->
+  {#if activeTab === 'games'}
+    <div class="games">
+      {#each games as game}
+        <button
+          class="game-card"
+          class:unavailable={!game.available}
+          style="--card-color: {game.color}"
+          on:click={() => playGame(game)}
+          disabled={!game.available}
+          title={game.available ? '' : '준비 중...'}
+        >
+          {#if !game.available}
+            <div class="coming-soon-badge">준비 중</div>
+          {/if}
+          <div class="game-emoji">{game.emoji}</div>
+          <div class="game-name">{game.name}</div>
+          {#if game.available}
+            <div class="play-icon">▶</div>
+          {:else}
+            <div class="play-icon soon">🔒</div>
+          {/if}
+        </button>
+      {/each}
+    </div>
+  {/if}
+
+  <!-- 랭킹 탭 -->
+  {#if activeTab === 'rankings'}
+    <div class="rankings-panel">
+      <div class="ranking-game-label">🏃 타이밍 점프 Top 10</div>
+
+      {#if rankingsLoading}
+        <div class="rank-loading">불러오는 중...</div>
+      {:else if rankings.length === 0}
+        <div class="rank-empty">
+          <div class="rank-empty-icon">🏆</div>
+          <p>아직 기록이 없어요!</p>
+          <p class="rank-empty-sub">첫 번째 랭커가 되어보세요 🎯</p>
+        </div>
+      {:else}
+        <ol class="rank-list">
+          {#each rankings as entry, i}
+            <li class="rank-item" class:top3={i < 3}>
+              <span class="rank-num">
+                {#if i === 0}🥇{:else if i === 1}🥈{:else if i === 2}🥉{:else}{i + 1}{/if}
+              </span>
+              <span class="rank-name">
+                {entry.username || entry.player_name}{tierEmoji(entry.tier) ? ' ' + tierEmoji(entry.tier) : ''}
+              </span>
+              <span class="rank-score">{entry.score.toLocaleString()}점</span>
+            </li>
+          {/each}
+        </ol>
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -59,7 +132,7 @@
 
   /* 타이틀 */
   .title-container {
-    margin-bottom: 48px;
+    margin-bottom: 32px;
     animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
@@ -84,6 +157,38 @@
     font-size: clamp(16px, 3.5vw, 20px);
     color: #8b5a8e;
     font-weight: 600;
+  }
+
+  /* 탭 */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 28px;
+  }
+
+  .tab {
+    background: rgba(255, 255, 255, 0.6);
+    border: 2px solid rgba(255, 107, 157, 0.2);
+    border-radius: 24px;
+    padding: 8px 24px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #8b5a8e;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    background: #ff6b9d;
+    border-color: #ff6b9d;
+    color: white;
+    box-shadow: 0 4px 16px rgba(255, 107, 157, 0.35);
+  }
+
+  .tab:not(.active):hover {
+    background: rgba(255, 107, 157, 0.1);
+    border-color: rgba(255, 107, 157, 0.4);
   }
 
   /* 게임 카드 그리드 */
@@ -179,6 +284,90 @@
   .game-card:not(.unavailable):hover .play-icon {
     background: rgba(255, 255, 255, 0.5);
     transform: scale(1.2);
+  }
+
+  /* 랭킹 패널 */
+  .rankings-panel {
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 24px;
+    padding: 24px 20px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    animation: fadeInUp 0.4s ease;
+  }
+
+  .ranking-game-label {
+    font-size: 17px;
+    font-weight: 800;
+    color: #ff6b9d;
+    margin-bottom: 16px;
+  }
+
+  .rank-loading {
+    color: #8b5a8e;
+    padding: 32px;
+    font-size: 15px;
+  }
+
+  .rank-empty {
+    padding: 32px 16px;
+    color: #8b5a8e;
+  }
+
+  .rank-empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+
+  .rank-empty-sub {
+    font-size: 13px;
+    color: #aaa;
+    margin-top: 4px;
+  }
+
+  .rank-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .rank-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.6);
+  }
+
+  .rank-item.top3 {
+    background: linear-gradient(135deg, rgba(255, 107, 157, 0.12), rgba(255, 183, 77, 0.12));
+  }
+
+  .rank-num {
+    font-size: 20px;
+    min-width: 36px;
+    text-align: center;
+    font-weight: 900;
+    color: #555;
+  }
+
+  .rank-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+    color: #2d1b4e;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rank-score {
+    font-size: 15px;
+    font-weight: 800;
+    color: #ff6b9d;
+    white-space: nowrap;
   }
 
   /* 애니메이션 */
