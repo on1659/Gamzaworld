@@ -3,9 +3,10 @@
   import Lobby from './Lobby.svelte';
   import TimingJump from './games/timing-jump/TimingJump.svelte';
   import RhythmTap from './games/rhythm-tap/RhythmTap.svelte';
+  import StackTower from './games/stack-tower/StackTower.svelte';
   import AuthHeader from './components/AuthHeader.svelte';
 
-  let currentView = 'lobby'; // 'lobby' | 'timing-jump' | 'rhythm-tap'
+  let currentView = 'lobby'; // 'lobby' | 'timing-jump' | 'rhythm-tap' | 'stack-tower'
   let user = null; // 로그인한 유저 정보
 
   // ── 인증 ───────────────────────────────────────────
@@ -80,6 +81,8 @@
     <TimingJump onBack={goToLobby} />
   {:else if currentView === 'rhythm-tap'}
     <RhythmTap onBack={goToLobby} />
+  {:else if currentView === 'stack-tower'}
+    <StackTower onBack={goToLobby} />
   {/if}
 </main>
 

@@ -4,7 +4,7 @@
   const games = [
     { id: 'timing-jump', emoji: '🏃', name: '타이밍 점프', color: '#FFB3D9', available: true },
     { id: 'rhythm-tap',  emoji: '🎵', name: '리듬 탭',    color: '#B3E5FF', available: true },
-    { id: 'stack-tower', emoji: '🏗️', name: '스택 타워',  color: '#FFE5B3', available: false },
+    { id: 'stack-tower', emoji: '🏗️', name: '스택 타워',  color: '#FFE5B3', available: true },
   ];
 
   let activeTab = 'games'; // 'games' | 'rankings'
