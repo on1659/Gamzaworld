@@ -1,21 +1,15 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { io } from 'socket.io-client';
-  import { GAME_CONFIG } from './logic.js';
+  import { GAME_CONFIG, RhythmTapGame } from './logic.js';
 
   export let onBack = () => {};
 
   // ── 상태 ───────────────────────────────────────────
   let canvas;
-  let socket;
+  let game = null;
   let gameState = null;
-  let connected = false;
-  let connecting = true;
-  let errorMsg = '';
   let lastJudgment = null; // { judgment, score, combo, timestamp }
-
-  // Vite proxy forwards /socket.io → localhost:3000 in dev
-  const SERVER_URL = typeof window !== 'undefined' ? window.location.origin : '';
+  let rafId;
 
   const CW = GAME_CONFIG.gameWidth;   // 600
   const CH = GAME_CONFIG.gameHeight;  // 400
@@ -220,61 +214,37 @@
     ctx.fillText('Press SPACE to retry, ESC to exit', CW / 2, CH / 2 + 130);
   }
 
-  // ── Socket.IO ─────────────────────────────────────
-  function connectSocket() {
-    socket = io(SERVER_URL);
+  // ── 게임 루프 (클라이언트 사이드) ────────────────
+  let lastFrameTime = 0;
+  const TARGET_FPS = 30;
+  const FRAME_MS = 1000 / TARGET_FPS;
 
-    socket.on('connect', () => {
-      console.log('[RhythmTap] Socket connected');
-      connected = true;
-      connecting = false;
-      socket.emit('game:start', { gameId: 'rhythm-tap', mode: 'single' });
-    });
+  function gameLoop(timestamp) {
+    rafId = requestAnimationFrame(gameLoop);
 
-    socket.on('game:started', (data) => {
-      console.log('[RhythmTap] 게임 시작:', data);
-      gameState = data;
-    });
+    if (!canvas || !game) return;
 
-    socket.on('game:state', (state) => {
-      gameState = state;
-    });
+    const elapsed = timestamp - lastFrameTime;
+    if (elapsed < FRAME_MS) return;
+    lastFrameTime = timestamp - (elapsed % FRAME_MS);
 
-    socket.on('game:judgment', (result) => {
-      console.log('[RhythmTap] 판정:', result);
-      lastJudgment = { ...result, timestamp: Date.now() };
-    });
+    // 게임 업데이트
+    if (game.status === 'running') {
+      gameState = game.update();
+    }
 
-    socket.on('game:ended', (data) => {
-      console.log('[RhythmTap] 게임 종료:', data);
-      if (gameState) {
-        gameState.status = 'gameover';
-      }
-    });
-
-    socket.on('disconnect', () => {
-      console.warn('[RhythmTap] Socket disconnected');
-      connected = false;
-      errorMsg = '서버 연결 끊김';
-    });
-
-    socket.on('connect_error', (err) => {
-      console.error('[RhythmTap] 연결 실패:', err);
-      connected = false;
-      connecting = false;
-      errorMsg = '서버 연결 실패';
-    });
+    // 렌더링
+    const ctx = canvas.getContext('2d');
+    drawGame(ctx);
   }
 
   // ── 입력 (키보드) ─────────────────────────────────
   function handleKeydown(e) {
-    if (!socket || !connected) return;
-
     // D, F, J, K → 레인 0, 1, 2, 3
     const keyToLane = { d: 0, D: 0, f: 1, F: 1, j: 2, J: 2, k: 3, K: 3 };
     if (keyToLane[e.key] !== undefined) {
       e.preventDefault();
-      socket.emit('game:input', { type: 'tap', lane: keyToLane[e.key] });
+      handleTap(keyToLane[e.key]);
       return;
     }
 
@@ -285,72 +255,52 @@
         restartGame();
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        cleanup();
         onBack();
       }
+      return;
     }
 
     // ESC → 나가기
     if (e.key === 'Escape') {
       e.preventDefault();
-      cleanup();
       onBack();
     }
   }
 
-  function restartGame() {
-    if (socket && connected) {
-      socket.emit('game:start', { gameId: 'rhythm-tap', mode: 'single' });
-      lastJudgment = null;
+  function handleTap(lane) {
+    if (!game || game.status !== 'running') return;
+    const result = game.tap(lane);
+    if (result) {
+      lastJudgment = { ...result, timestamp: Date.now() };
     }
   }
 
-  // ── 렌더 루프 ─────────────────────────────────────
-  let rafId;
-  function renderLoop() {
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      drawGame(ctx);
-    }
-    rafId = requestAnimationFrame(renderLoop);
+  function restartGame() {
+    game = new RhythmTapGame();
+    gameState = game.getState();
+    lastJudgment = null;
   }
 
   // ── 라이프사이클 ─────────────────────────────────
   onMount(() => {
-    connectSocket();
+    game = new RhythmTapGame();
+    gameState = game.getState();
     window.addEventListener('keydown', handleKeydown);
-    renderLoop();
+    rafId = requestAnimationFrame(gameLoop);
   });
 
   onDestroy(() => {
-    cleanup();
-  });
-
-  function cleanup() {
     if (rafId) cancelAnimationFrame(rafId);
     window.removeEventListener('keydown', handleKeydown);
-    if (socket) {
-      socket.disconnect();
-      socket = null;
-    }
-  }
+  });
 </script>
 
 <div class="game-container">
-  {#if connecting}
-    <div class="loading">서버 연결 중...</div>
-  {:else if errorMsg}
-    <div class="error">
-      <p>{errorMsg}</p>
-      <button on:click={onBack}>돌아가기</button>
-    </div>
-  {:else}
-    <canvas bind:this={canvas} width={CW} height={CH}></canvas>
-    <div class="controls">
-      <p><strong>D F J K</strong> - Tap notes</p>
-      <p><strong>ESC</strong> - Exit</p>
-    </div>
-  {/if}
+  <canvas bind:this={canvas} width={CW} height={CH}></canvas>
+  <div class="controls">
+    <p><strong>D F J K</strong> - Tap notes</p>
+    <p><strong>SPACE</strong> - Retry &nbsp; <strong>ESC</strong> - Exit</p>
+  </div>
 </div>
 
 <style>
@@ -369,27 +319,6 @@
     border-radius: 8px;
     box-shadow: 0 8px 32px rgba(0, 217, 255, 0.4);
     image-rendering: crisp-edges;
-  }
-
-  .loading,
-  .error {
-    font-size: 24px;
-    text-align: center;
-  }
-
-  .error button {
-    margin-top: 20px;
-    padding: 12px 24px;
-    font-size: 18px;
-    background: #00d9ff;
-    color: #1a1a2e;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-
-  .error button:hover {
-    background: #00b8d4;
   }
 
   .controls {
