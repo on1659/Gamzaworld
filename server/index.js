@@ -150,9 +150,14 @@ io.on('connection', (socket) => {
   // 입력 처리
   socket.on('game:input', (input) => {
     try {
-      const state = gameSessionManager.handleInput(socket.id, input);
-      if (state) {
-        socket.emit('game:state', state);
+      const result = gameSessionManager.handleInput(socket.id, input);
+      if (result) {
+        // 리듬 탭 게임의 tap 입력은 판정 결과 반환
+        if (input.type === 'tap') {
+          socket.emit('game:judgment', result);
+        } else {
+          socket.emit('game:state', result);
+        }
       }
     } catch (error) {
       socket.emit('game:error', { message: error.message });

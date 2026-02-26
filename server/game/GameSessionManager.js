@@ -3,6 +3,7 @@
  */
 
 import { TimingJumpGame } from '../../src/games/timing-jump/logic.js';
+import { RhythmTapGame } from '../../src/games/rhythm-tap/logic.js';
 
 // ────────────────────────────────────────────────────────────
 // GameSession: 하나의 게임 판
@@ -55,6 +56,10 @@ class GameSession {
 
     if (input.type === 'jump') {
       this.game.jump();
+    } else if (input.type === 'tap') {
+      // 리듬 탭 게임 입력
+      const result = this.game.tap(input.lane);
+      return result; // 즉시 판정 결과 반환
     }
 
     // 입력만 반영하고, 상태 전송은 게임 루프에서 처리
@@ -94,6 +99,8 @@ class GameSessionManager {
 
     if (gameId === 'timing-jump') {
       session.game = new TimingJumpGame();
+    } else if (gameId === 'rhythm-tap') {
+      session.game = new RhythmTapGame();
     } else {
       console.warn(`[GameSession] 알 수 없는 게임: ${gameId}`);
       return null;
