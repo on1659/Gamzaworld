@@ -267,6 +267,33 @@
     }
   }
 
+  // ── 입력 (터치/클릭) ──────────────────────────────
+  function handleCanvasClick(e) {
+    if (!canvas) return;
+
+    // 게임 오버면 재시작
+    if (gameState && gameState.status === 'gameover') {
+      restartGame();
+      return;
+    }
+
+    // 클릭한 X 좌표로 레인 판별
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const scaleX = CW / rect.width;
+    const x = (clientX - rect.left) * scaleX;
+
+    // 각 레인의 중심 X 범위 판단
+    const { laneCount, laneWidth, laneSpacing } = GAME_CONFIG;
+    for (let i = 0; i < laneCount; i++) {
+      const laneX = getLaneX(i);
+      if (x >= laneX && x <= laneX + laneWidth) {
+        handleTap(i);
+        return;
+      }
+    }
+  }
+
   function handleTap(lane) {
     if (!game || game.status !== 'running') return;
     const result = game.tap(lane);
@@ -295,34 +322,98 @@
   });
 </script>
 
-<div class="game-container">
-  <canvas bind:this={canvas} width={CW} height={CH}></canvas>
+<div class="game-wrapper">
+  <!-- 헤더 -->
+  <div class="game-header">
+    <button class="back-btn" on:click={onBack}>← 로비</button>
+    <h2 class="game-title">🎵 리듬 탭</h2>
+    <div></div>
+  </div>
+
+  <!-- 캔버스 -->
+  <div
+    class="canvas-container"
+    on:click={handleCanvasClick}
+    on:touchstart|preventDefault={handleCanvasClick}
+    role="button"
+    tabindex="0"
+  >
+    <canvas bind:this={canvas} width={CW} height={CH}></canvas>
+  </div>
+
+  <!-- 조작 안내 -->
   <div class="controls">
-    <p><strong>D F J K</strong> - Tap notes</p>
-    <p><strong>SPACE</strong> - Retry &nbsp; <strong>ESC</strong> - Exit</p>
+    <p><strong>D F J K</strong> 또는 레인 탭 → 노트 치기</p>
+    <p><strong>SPACE</strong> - 재시작 &nbsp; <strong>ESC</strong> - 나가기</p>
   </div>
 </div>
 
 <style>
-  .game-container {
+  .game-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    gap: 16px;
+    padding: 24px 16px;
+    width: 100%;
+    max-width: 640px;
     min-height: 100vh;
     background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
     color: #fff;
   }
 
+  .game-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .back-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(0, 217, 255, 0.5);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #00d9ff;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .back-btn:hover {
+    background: rgba(0, 217, 255, 0.25);
+    transform: translateX(-2px);
+  }
+
+  .game-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: #00d9ff;
+    margin: 0;
+  }
+
+  .canvas-container {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 217, 255, 0.3);
+  }
+
   canvas {
+    display: block;
+    width: 100%;
+    max-width: 600px;
+    height: auto;
     border: 3px solid #00d9ff;
     border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(0, 217, 255, 0.4);
     image-rendering: crisp-edges;
   }
 
   .controls {
-    margin-top: 20px;
     text-align: center;
     font-size: 14px;
     opacity: 0.8;

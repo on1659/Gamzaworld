@@ -55,7 +55,7 @@ export class RhythmTapGame {
     this.frameCount = 0;
     this.speed = GAME_CONFIG.noteSpeed;
     this.status = 'running';  // 'running' | 'gameover'
-    this.nextNoteIn = 60;     // 프레임 카운트
+    this.nextNoteIn = 10;     // 프레임 카운트
     this._noteIdCounter = 0;
 
     this.stats = {
