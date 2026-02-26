@@ -234,7 +234,7 @@
 
     socket.on('game:started', (data) => {
       console.log('[RhythmTap] 게임 시작:', data);
-      gameState = data.state;
+      gameState = data;
     });
 
     socket.on('game:state', (state) => {
@@ -309,9 +309,10 @@
   // ── 렌더 루프 ─────────────────────────────────────
   let rafId;
   function renderLoop() {
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    drawGame(ctx);
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      drawGame(ctx);
+    }
     rafId = requestAnimationFrame(renderLoop);
   }
 

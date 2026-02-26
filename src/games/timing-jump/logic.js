@@ -26,8 +26,8 @@ export const GAME_CONFIG = {
   obstacleMaxHeight: 80,
 
   // 속도
-  initialSpeed: 4,
-  speedIncrement: 0.0006,
+  initialSpeed: 10,
+  speedIncrement: 0.0015,
 };
 
 export class TimingJumpGame {
@@ -97,8 +97,8 @@ export class TimingJumpGame {
         passed: false,
       });
 
-      // 점점 빠르게 스폰 (최소 55프레임 간격)
-      this.nextObstacleIn = Math.max(55, 130 - Math.floor(this.frameCount / 150));
+      // 점점 빠르게 스폰 (최소 35프레임 간격)
+      this.nextObstacleIn = Math.max(35, 100 - Math.floor(this.frameCount / 80));
     }
 
     // ── 장애물 이동 + 통과 판정 ───────────────────
