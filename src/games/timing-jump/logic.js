@@ -26,8 +26,8 @@ export const GAME_CONFIG = {
   obstacleMaxHeight: 80,
 
   // 속도
-  initialSpeed: 55,
-  speedIncrement: 0.012,
+  initialSpeed: 130,
+  speedIncrement: 0.035,
 };
 
 export class TimingJumpGame {
