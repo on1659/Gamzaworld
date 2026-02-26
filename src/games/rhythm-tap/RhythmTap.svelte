@@ -14,9 +14,8 @@
   let errorMsg = '';
   let lastJudgment = null; // { judgment, score, combo, timestamp }
 
-  const SERVER_URL = import.meta.env.DEV
-    ? 'http://localhost:3000'
-    : (typeof window !== 'undefined' ? window.location.origin : '');
+  // Vite proxy forwards /socket.io → localhost:3000 in dev
+  const SERVER_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
   const CW = GAME_CONFIG.gameWidth;   // 600
   const CH = GAME_CONFIG.gameHeight;  // 400
